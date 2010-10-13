@@ -1,5 +1,5 @@
 NAME    =       ichat
-SCRS    =       serveur_select3.c
+SCRS    =       serveur_select3.c init.c
 OBJS    =       $(SRCS:.c=.o)
 CC      =       gcc
 RM      =       rm -rf
