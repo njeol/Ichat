@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include "ichat.h"
 
+// numero de port 
 #define PORT 2011
 
 void send_msg(int listener, int fdmax, int i, fd_set master)
@@ -16,6 +17,7 @@ void send_msg(int listener, int fdmax, int i, fd_set master)
   char buf[1024];
   int j = 0;
   
+  /* we got some data from a client*/
   if ((nbytes = recv(i, buf, sizeof(buf), 0)) >= 0)
     {
       for (j = 0; j <= fdmax; j++)
@@ -50,50 +52,60 @@ int new_member(int flag, int fdmax)
 
 void get_init(char **argv)
 {
-  fd_set master;
-  fd_set read_fds;
-  struct sockaddr_in serveraddr;
-  struct sockaddr_in clientaddr;
-  int listener, listen = 0;
-  int fdmax = 0;
-  int addrlen = 0;
+  fd_set master;                  /* master file descriptor list */
+  fd_set read_fds;                /* temp file descriptor list for select() */
+  struct sockaddr_in serveraddr;  /* server address */
+  struct sockaddr_in clientaddr;  /* client address */
+  int listener = 0;               /* listening socket descriptor */
+  int fdmax = 0;                  /* maximum file descriptor number */
+  int addrlen = 0;                /* for setsockopt() */
   int i = 0;
-  int newfd = 0;
+  int newfd = 0;                  /* newly accept()ed socket descriptor */
   char *connect = "Hello World\n";
   char *msg_send = "message send\n";
   int flag = 0;
   
+  /* clear the master and temp sets */
   FD_ZERO(&master);
   FD_ZERO(&read_fds);
   
+  /* get the listener */
   listener = f_socket();
+
+  /*"address already in use" error message */
   f_setsockopt(listener);
   
+  /* bind */
   serveraddr.sin_family = AF_INET;
   serveraddr.sin_addr.s_addr = INADDR_ANY;
   serveraddr.sin_port = htons(PORT);
   memset(&(serveraddr.sin_zero), '\0', 8);
-  
   f_bind(listener, serveraddr);
-  listen = f_listen(listener);
 
+  /* listen */
+  listener = f_listen(listener);
+
+  /* add the listener to the master set */
   FD_SET(listener, &master);
+  /* keep track of the biggest file descriptor */
   fdmax = listener;
   while(1)
   {
     read_fds = master;
-    // fdmax = f_select(fdmax, read_fds);
+    //fdmax = f_select(fdmax, read_fds);
     if (select(fdmax + 1, &read_fds, NULL, NULL, NULL) == -1)
     {
-      perror("Server-select() error");
-      exit(1);
+        perror("Server-select() error");
+        exit(1);
     }
     printf("Server-select() is OK...\n");
-        
+  
+     /*run through the existing connections looking for data to be read*/
     for (i = 0; i <= fdmax; i++)
     {
       if (FD_ISSET(i, &read_fds))
       {
+        /*there is one*/
         if (i == listener)
         {
           flag = 1;
