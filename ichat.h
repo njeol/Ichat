@@ -1,6 +1,10 @@
 #ifndef   __ICHAT_H__
  #define  __ICHAT_H__
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 /*
 ** INIT.C
 */
