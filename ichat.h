@@ -1,5 +1,5 @@
-#ifndef   __ICHAT_H__
- #define  __ICHAT_H__
+#ifndef __ICHAT_H__
+#define __ICHAT_H__
 
 /*
 ** INIT_FCT
