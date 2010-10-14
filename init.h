@@ -29,7 +29,7 @@ int   f_select(int fdmax, fd_set read_fds);
 /*
 ** GLOBAL.C
 */
-void  send_msg(int listener, int fdmax, int i, fd_set master, int flag_login);
+char  *send_msg(int listener, int fdmax, int i, fd_set master, int flag_login);
 int   new_member(int flag_new_member, int fdmax, int flag_login_register, int i);
 void  get_init(char **argv, t_list chat);
 

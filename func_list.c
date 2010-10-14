@@ -14,7 +14,7 @@ void		show_list(t_list l)
   new = l.first;
   while (new)
     {
-      printf("login:%s ", new->login);
+      printf("***login:%s***", new->login);
       printf("fd:%d \n", new->fd);
       new = new->next;
     }
