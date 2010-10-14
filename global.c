@@ -23,6 +23,8 @@ void check_cmd(char str[], t_list chat, int current_fd)
   
     if (strcmp(str, "/exit") == 0)
       exit (1);
+    
+    /*recup login and message for a private message if login is in the list*/
     check_login_in_list = malloc(sizeof(char *) * 32);
     private_msg = malloc(sizeof(char *) * 1024);
     while (str[i] != ' ' && str[i + 1] != ':')
@@ -50,6 +52,7 @@ char *send_msg(int listener, int fdmax, int i, fd_set master, int flag_login, t_
   char *ret_login;
   int j = 0;
   int len_login = 0;
+  char *connect = "Connected\n";
   
   /* we got some data from a client*/
   if (flag_login == 1)
@@ -62,9 +65,10 @@ char *send_msg(int listener, int fdmax, int i, fd_set master, int flag_login, t_
         stock_login[j] = login[j];
       ret_login = malloc(128 * sizeof(char*));
       strcpy(ret_login, stock_login);
-      login_str = strcat(stock_login, " : vient de se connecter\n");
+      login_str = strcat(stock_login, " : is now connected\n");
       for (j = 0; j <= fdmax - 1; j++)
         send(j, login_str, strlen(login_str), 0);
+      send(i, connect, strlen(connect), 0);
       return (ret_login);
     }
   }
@@ -233,7 +237,7 @@ void get_init(char **argv, t_list chat)
               put_in_list_front(&chat, newfd, login);
            flag_login = 0;
           }
-        send(i, msg_send, strlen(msg_send), 0);
+      //  send(i, msg_send, strlen(msg_send), 0);
       }
     }
   }
