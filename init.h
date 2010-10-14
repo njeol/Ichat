@@ -33,4 +33,13 @@ char  *send_msg(int listener, int fdmax, int i, fd_set master, int flag_login);
 int   new_member(int flag_new_member, int fdmax, int flag_login_register, int i);
 void  get_init(char **argv, t_list chat);
 
+/*
+** FUNC_LIST
+*/
+
+int     check_list(t_list l, char *login_new);
+void		show_list(t_list l);
+void		put_in_list_front(t_list *l, int fd_number, char *login);
+  
+
 #endif /* __ICHAT_H__ */

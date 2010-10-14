@@ -11,6 +11,7 @@
 void		show_list(t_list l)
 {
   t_list	*new;
+  
   new = l.first;
   while (new)
     {
@@ -20,6 +21,21 @@ void		show_list(t_list l)
     }
   printf("\n");
 
+}
+
+int     check_list(t_list l, char *login_new)
+{
+  t_list	*new;
+  
+  new = l.first;
+  while (new)
+    {
+        if (strcmp(new->login, login_new) != 0)
+          return (new->fd);sq
+      new = new->next;
+    }
+  printf("\n");
+  return (0);
 }
 
 void		put_in_list_front(t_list *l, int fd_number, char *login)
