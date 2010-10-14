@@ -12,13 +12,14 @@
 // numero de port 
 #define PORT 2011
 
-void send_msg(int listener, int fdmax, int i, fd_set master, int flag_login)
+char *send_msg(int listener, int fdmax, int i, fd_set master, int flag_login)
 {
   int nbytes = 0;
   char buf[1024];
-  char login[32];
+  char login[128];
   char *login_str = NULL;
   char *stock_login;
+  char *ret_login;
   int j = 0;
   int len_login = 0;
   
@@ -31,9 +32,12 @@ void send_msg(int listener, int fdmax, int i, fd_set master, int flag_login)
       stock_login = malloc(sizeof(*stock_login) * 32);
       for (j = 0; j <= (len_login - 3); j++)
         stock_login[j] = login[j];
+      ret_login = malloc(128 * sizeof(char*));
+      strcpy(ret_login, stock_login);
       login_str = strcat(stock_login, " : vient de se connecter\n");
       for (j = 0; j <= fdmax - 1; j++)
         send(j, login_str, strlen(login_str), 0);
+      return (ret_login);
     }
   }
   else
@@ -196,8 +200,6 @@ void get_init(char **argv, t_list chat)
             if(newfd > fdmax)
               fdmax = newfd;
             printf("%s: New connection from %s on socket %d\n", argv[0], inet_ntoa(clientaddr.sin_addr), newfd);
-            // put_in_list_front(&chat, fd_t, login);
-            // show_list(chat);
             send(newfd, connect, strlen(connect), 0);
             // get_login(listener, fdmax, i, master, flag);
             flag_login = 1;
@@ -206,7 +208,11 @@ void get_init(char **argv, t_list chat)
         }
         else
           {
-            send_msg(listener, fdmax, i, master, flag_login);
+            
+            login = send_msg(listener, fdmax, i, master, flag_login); 
+            if (flag_login == 1)
+              put_in_list_front(&chat, newfd, login);
+            show_list(chat);
             flag_login = 0;
           }
         send(i, msg_send, strlen(msg_send), 0);
