@@ -18,8 +18,8 @@ int   f_select(int fdmax, fd_set read_fds);
 /*
 ** GLOBAL.C
 */
-void  send_msg(int listener, int fdmax, int i, fd_set master);
-int   new_member(int flag, int fdmax);
+void  send_msg(int listener, int fdmax, int i, fd_set master, int flag_login);
+int   new_member(int flag_new_member, int fdmax, int flag_login_register, int i);
 void  get_init(char **argv);
 
 #endif /* __ICHAT_H__ */

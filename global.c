@@ -1,3 +1,4 @@
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,14 +12,33 @@
 // numero de port 
 #define PORT 2011
 
-void send_msg(int listener, int fdmax, int i, fd_set master)
+void send_msg(int listener, int fdmax, int i, fd_set master, int flag_login)
 {
   int nbytes = 0;
   char buf[1024];
+  char login[32];
+  char *login_str = NULL;
+  char *stock_login;
   int j = 0;
+  int len_login = 0;
   
   /* we got some data from a client*/
-  if ((nbytes = recv(i, buf, sizeof(buf), 0)) >= 0)
+  if (flag_login == 1)
+  {
+    if ((nbytes = recv(i, login, sizeof(login), 0)) >= 0)
+    {
+      len_login = strlen(login);
+      stock_login = malloc(sizeof(*stock_login) * 32);
+      for (j = 0; j <= (len_login - 3); j++)
+        stock_login[j] = login[j];
+      login_str = strcat(stock_login, " : vient de se connecter\n");
+      for (j = 0; j <= fdmax - 1; j++)
+        send(j, login_str, strlen(login_str), 0);
+    }
+  }
+  else
+  {
+    if ((nbytes = recv(i, buf, sizeof(buf), 0)) >= 0)
     {
       for (j = 0; j <= fdmax; j++)
       {
@@ -34,20 +54,60 @@ void send_msg(int listener, int fdmax, int i, fd_set master)
         }
       }
     }
+  }
 }
 
-int new_member(int flag, int fdmax)
+void get_login(int listener, int fdmax, int i, fd_set master)
+{
+  int ret = 0;
+  int nbytes = 0;
+  char login[128];
+  int j = 0;
+  char *login_connect;
+  
+  /* we got some data from a client*/
+    if ((nbytes = recv(i, login, sizeof(login), 0)) >= 0)
+    {
+      login_connect = strcat(login, " : vient de se connecter\n");
+      for (j = 0; j <= fdmax; j++)
+      {
+      /* send to everyone! */
+        if (FD_ISSET(j, &master))
+        {
+        /* except the listener and ourselves */
+          if (j != listener && j != i)
+          {
+            if (send(j, login_connect, nbytes, 0) == -1)
+              perror("send() error ");
+          }
+        }
+      }
+        // ret = read(newfd, login, strlen(login));
+        // printf("login : %s retour : %d\n", login, ret);
+    }
+}
+
+int new_member(int flag_new_member, int fdmax, int flag_login_register, int i)
 {
   int k = 0;
+  int stock_flack;
   char *new_member = "New member connected\n";
+  int nbytes = 0;
+  char login[128];
+  char *login_str = NULL;
   
-  if (flag == 1)
+  if (flag_new_member == 1 && flag_login_register == 1)
    {
-     for (k = 0; k <= fdmax - 1; k++)
-       send(k, new_member, strlen(new_member), 0);
-     flag = 0;
+      if ((nbytes = recv(i, login, sizeof(login), 0)) >= 0)
+      {
+        login_str = strcat(login, " : vient de se connecter");
+        printf("###### %s #####", login_str);
+        for (k = 0; k <= fdmax - 1; k++)
+          send(k, login_str, strlen(login_str), 0);
+        flag_new_member = 0;
+      }
    }
-   return flag;
+  return flag_new_member;
 }
 
 void get_init(char **argv)
@@ -61,9 +121,12 @@ void get_init(char **argv)
   int addrlen = 0;                /* for setsockopt() */
   int i = 0;
   int newfd = 0;                  /* newly accept()ed socket descriptor */
-  char *connect = "Hello World\n";
+  char *connect = "Hello, Enter your login : \n";
   char *msg_send = "message send\n";
-  int flag = 0;
+  int flag_new_member = 0;
+  int flag_login = 0;
+  // char login[128];
+  char *login;
   
   /* clear the master and temp sets */
   FD_ZERO(&master);
@@ -108,7 +171,8 @@ void get_init(char **argv)
         /*there is one*/
         if (i == listener)
         {
-          flag = 1;
+          flag_new_member = 1;
+          login = malloc(sizeof(char *) * 1024);
           addrlen = sizeof(clientaddr);
           if((newfd = accept(listener, (struct sockaddr *)&clientaddr, &addrlen)) == -1)
             perror("Server-accept() error");
@@ -120,11 +184,16 @@ void get_init(char **argv)
               fdmax = newfd;
             printf("%s: New connection from %s on socket %d\n", argv[0], inet_ntoa(clientaddr.sin_addr), newfd);
             send(newfd, connect, strlen(connect), 0);
+            // get_login(listener, fdmax, i, master, flag);
+            flag_login = 1;
           }
-          flag = new_member(flag, fdmax);
+          // flag_new_member = new_member(flag_new_member, fdmax, flag_login, i);
         }
         else
-          send_msg(listener, fdmax, i, master);
+          {
+            send_msg(listener, fdmax, i, master, flag_login);
+            flag_login = 0;
+          }
         send(i, msg_send, strlen(msg_send), 0);
       }
     }
