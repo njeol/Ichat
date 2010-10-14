@@ -50,7 +50,7 @@ int new_member(int flag, int fdmax)
    return flag;
 }
 
-void get_init(char **argv)
+void get_init(char **argv, t_list chat)
 {
   fd_set master;                  /* master file descriptor list */
   fd_set read_fds;                /* temp file descriptor list for select() */
@@ -64,6 +64,9 @@ void get_init(char **argv)
   char *connect = "Hello World\n";
   char *msg_send = "message send\n";
   int flag = 0;
+  int fd_t = 5;
+  char login[3] = "lol";
+  
   
   /* clear the master and temp sets */
   FD_ZERO(&master);
@@ -119,6 +122,8 @@ void get_init(char **argv)
             if(newfd > fdmax)
               fdmax = newfd;
             printf("%s: New connection from %s on socket %d\n", argv[0], inet_ntoa(clientaddr.sin_addr), newfd);
+            put_in_list_front(&chat, fd_t, login);
+            show_list(chat);
             send(newfd, connect, strlen(connect), 0);
           }
           flag = new_member(flag, fdmax);
