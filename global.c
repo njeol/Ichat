@@ -7,7 +7,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include "ichat.h"
+#include "init.h"
 
 // numero de port 
 #define PORT 2011
@@ -110,7 +110,7 @@ int new_member(int flag_new_member, int fdmax, int flag_login_register, int i)
   return flag_new_member;
 }
 
-void get_init(char **argv)
+void get_init(char **argv, t_list chat)
 {
   fd_set master;                  /* master file descriptor list */
   fd_set read_fds;                /* temp file descriptor list for select() */
@@ -123,11 +123,9 @@ void get_init(char **argv)
   int newfd = 0;                  /* newly accept()ed socket descriptor */
   char *connect = "Hello, Enter your login : \n";
   char *msg_send = "message send\n";
-  int flag_new_member = 0;
   int flag_login = 0;
-  // char login[128];
   char *login;
-  
+
   /* clear the master and temp sets */
   FD_ZERO(&master);
   FD_ZERO(&read_fds);
@@ -171,7 +169,6 @@ void get_init(char **argv)
         /*there is one*/
         if (i == listener)
         {
-          flag_new_member = 1;
           login = malloc(sizeof(char *) * 1024);
           addrlen = sizeof(clientaddr);
           if((newfd = accept(listener, (struct sockaddr *)&clientaddr, &addrlen)) == -1)
@@ -183,6 +180,8 @@ void get_init(char **argv)
             if(newfd > fdmax)
               fdmax = newfd;
             printf("%s: New connection from %s on socket %d\n", argv[0], inet_ntoa(clientaddr.sin_addr), newfd);
+            // put_in_list_front(&chat, fd_t, login);
+            // show_list(chat);
             send(newfd, connect, strlen(connect), 0);
             // get_login(listener, fdmax, i, master, flag);
             flag_login = 1;

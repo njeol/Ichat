@@ -1,7 +1,8 @@
 NAME    =       ichat
-SCRS    =       global.c \
-                init.c   \
-                main.c
+SCRS    =       global.c    \
+                init.c      \
+                main.c      \
+                func_list.c
 OBJS    =       $(SRCS:.c=.o)
 CC      =       gcc
 RM      =       rm -rf

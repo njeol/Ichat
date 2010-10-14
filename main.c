@@ -1,7 +1,18 @@
-#include "ichat.h"
+#include <stdlib.h>
+#include "init.h"
 
-int main(int argc, char **argv)
+void		init_list(t_list *l)
 {
-  get_init(argv);  
+  l->first = NULL;
+  l->last = NULL;
+}
+
+
+int       main(int argc, char **argv)
+{
+  t_list  chat;
+  
+  init_list(&chat);
+  get_init(argv, chat);  
   return 0;
 }

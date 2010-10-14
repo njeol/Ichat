@@ -6,7 +6,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include "ichat.h"
+#include "init.h"
 
 #define PORT 2011
 
