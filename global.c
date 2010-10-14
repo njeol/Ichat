@@ -12,6 +12,34 @@
 // numero de port 
 #define PORT 2011
 
+void check_cmd(char str[], t_list chat, int current_fd)
+{
+  char *check_login_in_list = NULL;
+  int i = 1;
+  int j = 0;
+  int fd_valid = 0;
+  char *private_msg = NULL;
+  char *bad_login = "bad login's name\n";
+  
+    if (strcmp(str, "/exit") == 0)
+      exit (1);
+    check_login_in_list = malloc(sizeof(char *) * 32);
+    private_msg = malloc(sizeof(char *) * 1024);
+    while (str[i] != ' ' && str[i + 1] != ':')
+    {
+      check_login_in_list[i - 1] = str[i];
+      i++;
+    }
+    i += 2;
+    fd_valid = check_list(chat, check_login_in_list);
+    while (str[i])
+      private_msg[j++] = str[i++];
+    if (fd_valid != 0)
+      send(fd_valid, private_msg, strlen(private_msg), 0);
+    else
+      send(current_fd, bad_login, strlen(bad_login), 0);
+}
+
 char *send_msg(int listener, int fdmax, int i, fd_set master, int flag_login, t_list chat)
 {
   int nbytes = 0;
@@ -44,41 +72,29 @@ char *send_msg(int listener, int fdmax, int i, fd_set master, int flag_login, t_
   {
     if ((nbytes = recv(i, buf, sizeof(buf), 0)) >= 0)
     {
-      for (j = 0; j <= fdmax; j++)
+      if (buf[0] == '/')
+        check_cmd(buf, chat, i); 
+      else
       {
-      /* send to everyone! */
-        if (FD_ISSET(j, &master))
+        for (j = 0; j <= fdmax; j++)
         {
-        /* except the listener and ourselves */
-          if (j != listener && j != i)
+        /* send to everyone! */
+          if (FD_ISSET(j, &master))
           {
-            if (send(j, buf, nbytes, 0) == -1)
-              perror("send() error ");
+          /* except the listener and ourselves */
+            if (j != listener && j != i)
+            {
+              if (send(j, buf, nbytes, 0) == -1)
+                perror("send() error ");
+            }
           }
         }
-      }
+      }  
     }
   }
 }
 
-void private_msg()
-{
-  
-}
 
-void check_cmd(char *str, t_list chat)
-{
-  char *login = NULL;
-  
-  // login = strcat("/", t->first->login);
-  if (str[0] == "/")
-  {
-    if (strcmp(str, "/exit") != 0)
-      exit (1);
-    else if (strncmp(str, login) != 0)
-      private_msg(&chat);
-  }
-}
 
 void get_login(int listener, int fdmax, int i, fd_set master)
 {
@@ -212,7 +228,7 @@ void get_init(char **argv, t_list chat)
         else
           {
             
-            login = send_msg(listener, fdmax, i, master, flag_login, &chat); 
+            login = send_msg(listener, fdmax, i, master, flag_login, chat); 
             if (flag_login == 1)
               put_in_list_front(&chat, newfd, login);
            flag_login = 0;
