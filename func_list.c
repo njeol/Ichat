@@ -31,7 +31,7 @@ int     check_list(t_list l, char *login_new)
   while (new)
     {
         if (strcmp(new->login, login_new) != 0)
-          return (new->fd);s
+          return (new->fd);sq
       new = new->next;
     }
   printf("\n");
