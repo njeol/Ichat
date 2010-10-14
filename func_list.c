@@ -30,8 +30,8 @@ int     check_list(t_list l, char *login_new)
   new = l.first;
   while (new)
     {
-        if (strcmp(new->login, login_new) != 0)
-          return (new->fd);sq
+        if (strcmp(new->login, login_new) == 0)
+          return (new->fd);
       new = new->next;
     }
   printf("\n");

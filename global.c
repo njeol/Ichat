@@ -12,7 +12,7 @@
 // numero de port 
 #define PORT 2011
 
-char *send_msg(int listener, int fdmax, int i, fd_set master, int flag_login)
+char *send_msg(int listener, int fdmax, int i, fd_set master, int flag_login, t_list chat)
 {
   int nbytes = 0;
   char buf[1024];
@@ -20,6 +20,7 @@ char *send_msg(int listener, int fdmax, int i, fd_set master, int flag_login)
   char *login_str = NULL;
   char *stock_login;
   char *ret_login;
+  char *connect = "login already in use!\n Enter a other Login: \n";
   int j = 0;
   int len_login = 0;
   
@@ -34,6 +35,12 @@ char *send_msg(int listener, int fdmax, int i, fd_set master, int flag_login)
         stock_login[j] = login[j];
       ret_login = malloc(128 * sizeof(char*));
       strcpy(ret_login, stock_login);
+      if (check_list(chat, ret_login) != 0)
+        {
+          send(fdmax ,connect, strlen(connect), 0);
+          ret_login = send_msg(listener, fdmax, i, master, flag_login, chat);
+          return (ret_login);
+        }
       login_str = strcat(stock_login, " : vient de se connecter\n");
       for (j = 0; j <= fdmax - 1; j++)
         send(j, login_str, strlen(login_str), 0);
@@ -59,22 +66,6 @@ char *send_msg(int listener, int fdmax, int i, fd_set master, int flag_login)
       }
     }
   }
-}
-
-void private_msg()
-{
-  
-}
-
-void check_cmd(char *str, t_list chat)
-{
-  char *login = NULL;
-  
-  login = strcat("/", t->first->login);
-  if (strncmp(str, "/exit", sizeof(str)))
-    exit (1);
-  else if (strncmp(str, login, sizeof(str)))
-    private_msg(&chat);
 }
 
 void get_login(int listener, int fdmax, int i, fd_set master)
@@ -209,10 +200,9 @@ void get_init(char **argv, t_list chat)
         else
           {
             
-            login = send_msg(listener, fdmax, i, master, flag_login); 
+            login = send_msg(listener, fdmax, i, master, flag_login, chat); 
             if (flag_login == 1)
               put_in_list_front(&chat, newfd, login);
-            show_list(chat);
             flag_login = 0;
           }
         send(i, msg_send, strlen(msg_send), 0);
