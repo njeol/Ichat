@@ -12,7 +12,7 @@
 // numero de port 
 #define PORT 2011
 
-char *send_msg(int listener, int fdmax, int i, fd_set master, int flag_login)
+char *send_msg(int listener, int fdmax, int i, fd_set master, int flag_login, t_list chat)
 {
   int nbytes = 0;
   char buf[1024];
@@ -70,11 +70,14 @@ void check_cmd(char *str, t_list chat)
 {
   char *login = NULL;
   
-  login = strcat("/", t->first->login);
-  if (strncmp(str, "/exit", sizeof(str)))
-    exit (1);
-  else if (strncmp(str, login, sizeof(str)))
-    private_msg(&chat);
+  // login = strcat("/", t->first->login);
+  if (str[0] == "/")
+  {
+    if (strcmp(str, "/exit") != 0)
+      exit (1);
+    else if (strncmp(str, login) != 0)
+      private_msg(&chat);
+  }
 }
 
 void get_login(int listener, int fdmax, int i, fd_set master)
@@ -209,11 +212,10 @@ void get_init(char **argv, t_list chat)
         else
           {
             
-            login = send_msg(listener, fdmax, i, master, flag_login); 
+            login = send_msg(listener, fdmax, i, master, flag_login, &chat); 
             if (flag_login == 1)
               put_in_list_front(&chat, newfd, login);
-            show_list(chat);
-            flag_login = 0;
+           flag_login = 0;
           }
         send(i, msg_send, strlen(msg_send), 0);
       }
