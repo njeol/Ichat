@@ -57,6 +57,22 @@ void send_msg(int listener, int fdmax, int i, fd_set master, int flag_login)
   }
 }
 
+void private_msg()
+{
+  
+}
+
+void check_cmd(char *str, t_list chat)
+{
+  char *login = NULL;
+  
+  login = strcat("/", t->first->login);
+  if (strncmp(str, "/exit", sizeof(str)))
+    exit (1);
+  else if (strncmp(str, login, sizeof(str)))
+    private_msg(&chat);
+}
+
 void get_login(int listener, int fdmax, int i, fd_set master)
 {
   int ret = 0;
@@ -101,7 +117,7 @@ int new_member(int flag_new_member, int fdmax, int flag_login_register, int i)
       if ((nbytes = recv(i, login, sizeof(login), 0)) >= 0)
       {
         login_str = strcat(login, " : vient de se connecter");
-        printf("###### %s #####", login_str);
+        // printf("###### %s #####", login_str);
         for (k = 0; k <= fdmax - 1; k++)
           send(k, login_str, strlen(login_str), 0);
         flag_new_member = 0;
