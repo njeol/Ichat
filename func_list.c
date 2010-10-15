@@ -23,7 +23,22 @@ void		show_list(t_list l)
 
 }
 
-int     check_list(t_list l, char *login_new)
+char *check_list_return_login(t_list l, int number_fd)
+{
+  t_list *new;
+  char *bad_return = "unfind";
+  
+  new = l.first;
+  while (new)
+  {
+    if (number_fd == new->fd)
+      return (new->login);
+    new = new->next;
+  }
+  return (bad_return);
+}
+
+int     check_list_return_fd(t_list l, char *login_new)
 {
   t_list	*new;
   

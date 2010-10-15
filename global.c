@@ -12,6 +12,65 @@
 // numero de port 
 #define PORT 2011
 
+void close_client(int current_fd, fd_set master)
+{
+  char *disconnect = "Client disconnected\n";
+  
+  send(current_fd, disconnect, strlen(disconnect), 0);
+//  shutdown(current_fd, 2);
+//  close(current_fd);
+  FD_CLR(current_fd, &master);
+  shutdown(current_fd, 2);
+}
+
+void check_cmd(char *str, t_list chat, int current_fd, fd_set master)
+{
+  char *check_login_in_list = NULL;
+  int i = 1;
+  int j = 0;
+  int fd_valid = 0;
+  char *private_msg = NULL;
+  char *bad_login = "bad login's name\n";
+  char *private_user_msg = "Private message from ";
+  char *recup_name_bis;
+
+    /*close client*/
+  printf ("######  %d  #####", current_fd);
+  int test = strcmp(str, "/exit\n");
+    if (strcmp(str, "/exit\n") == 3)
+      {
+        printf("##### ok\n");
+        close_client(current_fd, master);
+      }
+    else
+      printf("###### retour strcmp : %d\n", test);
+    /*recup login and message for a private message if login is in the list*/
+    check_login_in_list = malloc(sizeof(char *) * 32);
+    private_msg = malloc(sizeof(char *) * 1024);
+    while (str[i] != ' ' && str[i + 1] != ':')
+    {
+      check_login_in_list[i - 1] = str[i];
+      i++;
+    }
+    i += 2;
+    fd_valid = check_list_return_fd(chat, check_login_in_list);
+    while (str[i])
+      private_msg[j++] = str[i++];
+    if (fd_valid != 0)
+      {
+        recup_name_bis = check_list_return_login(chat, current_fd);
+        if (recup_name_bis != "unfind")
+          {
+            send(fd_valid, private_user_msg, strlen(private_user_msg), 0);
+            send(fd_valid, recup_name_bis, strlen(recup_name_bis), 0);
+            send(fd_valid, " : ", 3, 0);
+          }
+        send(fd_valid, private_msg, strlen(private_msg), 0);
+      }
+    else
+      send(current_fd, bad_login, strlen(bad_login), 0);
+}
+
 char *send_msg(int listener, int fdmax, int i, fd_set master, int flag_login, t_list chat)
 {
   int nbytes = 0;
@@ -20,9 +79,12 @@ char *send_msg(int listener, int fdmax, int i, fd_set master, int flag_login, t_
   char *login_str = NULL;
   char *stock_login;
   char *ret_login;
-  char *connect = "login already in use!\n Enter a other Login: \n";
+  char *connect_log = "login already in use!\n Enter a other Login: \n";
   int j = 0;
   int len_login = 0;
+  char *connect = "Connected\n";
+  char *msg_user = " wrote : ";
+  char *recup_name;
   
   /* we got some data from a client*/
   if (flag_login == 1)
@@ -35,15 +97,16 @@ char *send_msg(int listener, int fdmax, int i, fd_set master, int flag_login, t_
         stock_login[j] = login[j];
       ret_login = malloc(128 * sizeof(char*));
       strcpy(ret_login, stock_login);
-      if (check_list(chat, ret_login) != 0)
+      if (check_list_return_fd(chat, ret_login) != 0)
         {
-          send(fdmax ,connect, strlen(connect), 0);
+          send(fdmax ,connect_log, strlen(connect_log), 0);
           ret_login = send_msg(listener, fdmax, i, master, flag_login, chat);
           return (ret_login);
         }
       login_str = strcat(stock_login, " : vient de se connecter\n");
       for (j = 0; j <= fdmax - 1; j++)
         send(j, login_str, strlen(login_str), 0);
+      send(i, connect, strlen(connect), 0);
       return (ret_login);
     }
   }
@@ -51,19 +114,31 @@ char *send_msg(int listener, int fdmax, int i, fd_set master, int flag_login, t_
   {
     if ((nbytes = recv(i, buf, sizeof(buf), 0)) >= 0)
     {
-      for (j = 0; j <= fdmax; j++)
+      printf("### listener : %d\n### fdmax : %d\n### i : %d\n", listener, fdmax, i);
+      if (buf[0] == '/')
+        check_cmd(buf, chat, i, master); 
+      else
       {
-      /* send to everyone! */
-        if (FD_ISSET(j, &master))
+        for (j = 0; j <= fdmax; j++)
         {
-        /* except the listener and ourselves */
-          if (j != listener && j != i)
+        /* send to everyone! */
+          if (FD_ISSET(j, &master))
           {
-            if (send(j, buf, nbytes, 0) == -1)
-              perror("send() error ");
+          /* except the listener and ourselves */
+            if (j != listener && j != i)
+            {
+              recup_name = check_list_return_login(chat, i);
+              if (recup_name != "unfind")
+                {
+                  send(j, recup_name, strlen(recup_name), 0);
+                  send(j, msg_user, strlen(msg_user), 0);
+                }  
+              if (send(j, buf, nbytes, 0) == -1)
+                perror("send() error ");
+            }
           }
         }
-      }
+      }  
     }
   }
 }
@@ -168,7 +243,7 @@ void get_init(char **argv, t_list chat)
     if (select(fdmax + 1, &read_fds, NULL, NULL, NULL) == -1)
     {
         perror("Server-select() error");
-        exit(1);
+        exit (-1);
     }
     printf("Server-select() is OK...\n");
   
@@ -205,7 +280,7 @@ void get_init(char **argv, t_list chat)
               put_in_list_front(&chat, newfd, login);
             flag_login = 0;
           }
-        send(i, msg_send, strlen(msg_send), 0);
+      //  send(i, msg_send, strlen(msg_send), 0);
       }
     }
   }
