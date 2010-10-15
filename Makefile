@@ -10,12 +10,13 @@ RM      =       rm -rf
 $(NAME) : $(OBJS)
 	  $(CC) -o $(NAME) $(SCRS)
 
+all     : $(NAME)
+
 clean   :
 	 $(RM) *.o
 	 $(RM) \#*
 	 $(RM) *~
 
-all     : $(NAME)
 
 fclean  : clean
 	$(RM) $(NAME)
