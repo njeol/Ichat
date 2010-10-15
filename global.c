@@ -79,9 +79,10 @@ char *send_msg(int listener, int fdmax, int i, fd_set master, int flag_login, t_
   char *login_str = NULL;
   char *stock_login;
   char *ret_login;
+  char *connect = "login already in use!\n Enter a other Login: \n";
   int j = 0;
   int len_login = 0;
-  char *connect = "Connected\n";
+  char *user_connect = "Connected\n";
   char *msg_user = " wrote : ";
   char *recup_name;
   
@@ -96,10 +97,18 @@ char *send_msg(int listener, int fdmax, int i, fd_set master, int flag_login, t_
         stock_login[j] = login[j];
       ret_login = malloc(128 * sizeof(char*));
       strcpy(ret_login, stock_login);
+      // if (check_list_return_fd(chat, ret_login) != 0)
+      //   {
+      //     flag_login_exist = 1;
+      //     send(fdmax ,connect, strlen(connect), 0);
+      //     ret_login = send_msg(listener, fdmax, i, master, flag_login, chat, flag_login_exist);
+      //     flag_login_exist = 0;
+      //     return (ret_login);
+      //   }
       login_str = strcat(stock_login, " : is now connected\n");
       for (j = 0; j <= fdmax - 1; j++)
         send(j, login_str, strlen(login_str), 0);
-      send(i, connect, strlen(connect), 0);
+      send(i, user_connect, strlen(connect), 0);
       return (ret_login);
     }
   }
@@ -135,8 +144,6 @@ char *send_msg(int listener, int fdmax, int i, fd_set master, int flag_login, t_
     }
   }
 }
-
-
 
 void get_login(int listener, int fdmax, int i, fd_set master)
 {
@@ -273,7 +280,7 @@ void get_init(char **argv, t_list chat)
             login = send_msg(listener, fdmax, i, master, flag_login, chat); 
             if (flag_login == 1)
               put_in_list_front(&chat, newfd, login);
-           flag_login = 0;
+            flag_login = 0;
           }
       //  send(i, msg_send, strlen(msg_send), 0);
       }
