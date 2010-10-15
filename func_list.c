@@ -38,6 +38,40 @@ char *check_list_return_login(t_list l, int number_fd)
   return (bad_return);
 }
 
+int check_list_delog(t_list *l, int number_fd)
+{
+  t_list *new;
+  
+  l = l->first;
+    printf("---%d---\n", number_fd);
+  while (l)
+  {
+    printf("@@@%d@@@n", l->fd);
+    if ((number_fd == l->fd) && (l->next) && (l->prev))
+      {
+        l = l->prev;
+        new = l->next;
+        l->next = new->next;
+        free(new);
+        new = NULL;
+        printf("OK\n");
+        return(0);
+      }
+    else if ((number_fd == l->fd) && l->next)
+    {
+      printf("1er\n");
+    }
+    else if ((number_fd == l->fd)&& l->prev)
+    {
+      printf("dernier\n");
+    }
+    else
+      printf("bad T.T\n");
+    l = l->next;
+  }
+  return(1);
+}
+
 int     check_list_return_fd(t_list l, char *login_new)
 {
   t_list	*new;

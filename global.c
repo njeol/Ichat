@@ -18,9 +18,9 @@ void close_client(int current_fd, fd_set master)
   
   send(current_fd, disconnect, strlen(disconnect), 0);
 //  shutdown(current_fd, 2);
-//  close(current_fd);
-  FD_CLR(current_fd, &master);
-  shutdown(current_fd, 2);
+close(current_fd);
+  //FD_CLR(current_fd, &master);
+  //shutdown(current_fd, 2);
 }
 
 void check_cmd(char *str, t_list chat, int current_fd, fd_set master)
@@ -39,8 +39,11 @@ void check_cmd(char *str, t_list chat, int current_fd, fd_set master)
   int test = strcmp(str, "/exit\n");
     if (strcmp(str, "/exit\n") == 3)
       {
+        show_list(chat);
         printf("##### ok\n");
-        close_client(current_fd, master);
+        check_list_delog(&chat, current_fd);
+        show_list(chat);
+        //close_client(current_fd, master);
       }
     else
       printf("###### retour strcmp : %d\n", test);

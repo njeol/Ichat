@@ -36,7 +36,7 @@ void  get_init(char **argv, t_list chat);
 /*
 ** FUNC_LIST
 */
-
+int    check_list_delog(t_list *l, int number_fd);
 char    *check_list_return_login(t_list l, int number_fd);
 int     check_list_return_fd(t_list l, char *login_new);
 void		show_list(t_list l);
