@@ -59,11 +59,21 @@ int check_list_delog(t_list *l, int number_fd)
       }
     else if ((number_fd == l->fd) && l->next)
     {
+      new = l;
+      l = new->next;
+      free(new);
+      new = NULL;
       printf("1er\n");
+      return(0);
     }
-    else if ((number_fd == l->fd)&& l->prev)
+    else if ((number_fd == l->fd) && l->prev)
     {
+      new = l;
+      l = new->prev;
+      free(new);
+      new = NULL;
       printf("dernier\n");
+      return(0);
     }
     else
       printf("bad T.T\n");
