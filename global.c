@@ -21,9 +21,9 @@ void close_client(int current_fd, fd_set master, int fdmax, t_list chat)
   
   user_disconnect = check_list_return_login(chat, current_fd);
   send(current_fd, disconnect, strlen(disconnect), 0);
-  close(current_fd);
-  FD_CLR(current_fd, &master);
-  // shutdown(current_fd, 2);
+  //shutdown(current_fd, 1);
+  // close(current_fd);
+  // FD_CLR(current_fd, &master);
   for (j = 0; j <= fdmax; j++)
     {
       if (j != current_fd)
@@ -34,7 +34,7 @@ void close_client(int current_fd, fd_set master, int fdmax, t_list chat)
     }
 }
 
-void check_cmd(char *str, t_list chat, int current_fd, fd_set master, int fdmax)
+void check_cmd(char *str, t_list chat, int current_fd, fd_set master, fd_set read_fds, int fdmax)
 {
   char *check_login_in_list = NULL;
   int i = 1;
@@ -44,10 +44,23 @@ void check_cmd(char *str, t_list chat, int current_fd, fd_set master, int fdmax)
   char *bad_login = "bad login's name\n";
   char *private_user_msg = "Private message from ";
   char *recup_name_bis;
-
+  int ret_fdisset = 0;
+  
     /*close client*/
     if (strcmp(str, "/exit\n") == 3)
+    {
         close_client(current_fd, master, fdmax, chat);
+        show_list(chat);
+        printf("##### ok\n");
+        check_list_delog(&chat, current_fd, fdmax);
+        show_list(chat);
+        FD_CLR(current_fd, &master);
+        close(current_fd);
+        if(ret_fdisset = FD_ISSET(current_fd, &read_fds))
+          printf("######### check fd ! (%d)\n",ret_fdisset);
+        else
+          printf("***********blalbal\n");
+    }
     else
     {  
       /*recup login and message for a private message if login is in the list*/
@@ -81,7 +94,7 @@ void check_cmd(char *str, t_list chat, int current_fd, fd_set master, int fdmax)
     }
 }
 
-char *send_msg(int listener, int fdmax, int i, fd_set master, int flag_login, t_list chat)
+char *send_msg(int listener, int fdmax, int i, fd_set master, fd_set read_fds, int flag_login, t_list chat)
 {
   int nbytes = 0;
   char buf[1024];
@@ -114,16 +127,13 @@ char *send_msg(int listener, int fdmax, int i, fd_set master, int flag_login, t_
       if (check_list_return_fd(chat, ret_login) != 0)
         {
           send(fdmax ,connect_log, strlen(connect_log), 0);
-          ret_login = send_msg(listener, fdmax, i, master, flag_login, chat);
+          ret_login = send_msg(listener, fdmax, i, master, read_fds, flag_login, chat);
           return (ret_login);
         }
         login_str = strcat(stock_login, " : is now connected\n");
       for (j = 0; j <= fdmax - 1; j++)
         send(j, login_str, strlen(login_str), 0);
       send(i, connect, strlen(connect), 0);
-      // free(login);
-      // free(ret_login);
-      // free(stock_login);
       return (ret_login);
     }
   }
@@ -133,7 +143,7 @@ char *send_msg(int listener, int fdmax, int i, fd_set master, int flag_login, t_
     {
       buf[nbytes] = '\0'; 
       if (buf[0] == '/')
-        check_cmd(buf, chat, i, master, fdmax); 
+        check_cmd(buf, chat, i, master, read_fds, fdmax); 
       else
       {
         for (j = 0; j <= fdmax; j++)
@@ -175,10 +185,12 @@ void get_init(char **argv, t_list chat)
   char *msg_send = "message send\n";
   int flag_login = 0;
   char *login;
+  int ret_fdisset = 0;
+  int test = 0;
 
   /* clear the master and temp sets */
   FD_ZERO(&master);
-  FD_ZERO(&read_fds);
+  // FD_ZERO(&read_fds);
   
   /* get the listener */
   listener = f_socket();
@@ -202,15 +214,21 @@ void get_init(char **argv, t_list chat)
   fdmax = listener;
   while(1)
   {
+    FD_ZERO(&read_fds);
     read_fds = master;
     //fdmax = f_select(fdmax, read_fds);
+    printf("$$$$$ fdmax = %d\n", fdmax);
     if (select(fdmax + 1, &read_fds, NULL, NULL, NULL) == -1)
     {
         perror("Server-select() error");
         // exit (-1) ;
+        //  
     }
     printf("Server-select() is OK...\n");
     
+    if(ret_fdisset = FD_ISSET(fdmax, &read_fds))
+      printf("######### New incomming datum from Client ! (%d)\n",ret_fdisset);
+
      /*run through the existing connections looking for data to be read*/
     for (i = 0; i <= fdmax; i++)
     {
@@ -239,15 +257,21 @@ void get_init(char **argv, t_list chat)
         }
         else
           {
-            
-            login = send_msg(listener, fdmax, i, master, flag_login, chat); 
+            login = send_msg(listener, fdmax, i, master, read_fds, flag_login, chat); 
+            // test = nb_argu_list(chat);
+            // printf("$$$ nb_argu : %d\n", test);
             if (flag_login == 1)
               put_in_list_front(&chat, newfd, login);
            flag_login = 0;
+           // fdmax = nb_argu_list(chat);
+           // printf("$$$ nb_argu : %d\n", fdmax);
           }
       //  send(i, msg_send, strlen(msg_send), 0);
       }
     }
+    // test = nb_argu_list(chat);
+    // fdmax = nb_argu_list(chat);
+    // printf("$$$ nb_argu : %d\n", fdmax);
   }
 }
 
