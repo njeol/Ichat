@@ -57,6 +57,18 @@ int check_list_delog(t_list *l, int number_fd)
         printf("OK\n");
         return(0);
       }
+    // else
+    //   {
+    //     printf("\n   LAST   \n");
+    //      new = l->last;
+    //      number = new->fd;
+    //      l->last = new->prev;
+    //      if (l->last)
+    //        l->last->next = NULL;
+    //      else 
+    //        l->first = NULL;
+    //      return(0);
+    //   }
     // else if ((number_fd == l->fd) && l->next)
     // {
     //   printf("\n   PREMIER  \n");

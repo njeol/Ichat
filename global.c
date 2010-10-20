@@ -113,9 +113,12 @@ char *send_msg(int listener, int fdmax, int i, fd_set master, fd_set *read_fds, 
           ret_login = send_msg(listener, fdmax, i, master, read_fds, save_master, flag_login, chat);
           return (ret_login);
         }
-        login_str = strcat(stock_login, " : is now connected\n");
-      for (j = 0; j <= fdmax - 1; j++)
-        send(j, login_str, strlen(login_str), 0);
+      login_str = strcat(stock_login, " : is now connected\n");
+      for (j = 0; j <= fdmax; j++)
+        {
+          if (j != listener)
+            send(j, login_str, strlen(login_str), 0);
+        }
       send(i, connect, strlen(connect), 0);
       return (ret_login);
     }
