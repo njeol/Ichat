@@ -49,8 +49,16 @@ int check_list_delog(t_list *l, int number_fd)
     int number = 0;
     if ((number_fd == l->fd) /*&& (l->next) && (l->prev)*/)
       {
+       if (l->prev)
+       {
         l = l->prev;
         new = l->next;
+        }
+        else
+         { 
+           l = l->next;
+           new = l->prev;
+           }
         l->next = new->next;
         free(new);
         new = NULL;
