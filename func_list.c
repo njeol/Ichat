@@ -40,24 +40,30 @@ char *check_list_return_login(t_list l, int number_fd)
 
 int check_list_delog(t_list *l, int number_fd)
 {
-  int number = 0;
-  
-  l = l->first;
-  while (l)
-  {
-    t_list *new;
-    int number = 0;
-    if ((number_fd == l->fd) /*&& (l->next) && (l->prev)*/)
-      {
-        l = l->prev;
-        new = l->next;
-        l->next = new->next;
-        free(new);
-        new = NULL;
-        printf("OK\n");
-        return(0);
-      }
-    // else
+   l = l->first;
+   while (l)
+   {
+     t_list *new;
+     int number = 0;
+     if ((number_fd == l->fd) /*&& (l->next) && (l->prev)*/)
+       {
+        if (l->prev)
+        {
+         l = l->prev;
+         new = l->next;
+         }
+         else
+         { 
+           l = l->next;
+           new = l->prev;
+         }
+         l->next = new->next;
+         free(new);
+         new = NULL;
+         printf("OK\n");
+         return(0);
+       }
+           // else
     //   {
     //     printf("\n   LAST   \n");
     //      new = l->last;
