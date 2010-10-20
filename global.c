@@ -74,7 +74,7 @@ void check_cmd(char *str, t_list chat, int current_fd, fd_set master)
       send(current_fd, bad_login, strlen(bad_login), 0);
 }
 
-char *send_msg(int listener, int fdmax, int i, fd_set master, int flag_login, t_list chat)
+char *send_msg(int listener, int fdmax, int i, fd_set master, fd_set *read_fds, fd_set *save_master, int flag_login, t_list chat)
 {
   int nbytes = 0;
   char buf[1024];
