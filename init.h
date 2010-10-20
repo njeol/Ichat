@@ -6,6 +6,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#define closesocket(socket) close(socket);
+
 typedef struct	    s_list
 {
   char		          *login;
@@ -29,15 +31,14 @@ int   f_select(int fdmax, fd_set read_fds);
 /*
 ** GLOBAL.C
 */
-char  *send_msg(int listener, int fdmax, int i, fd_set master, fd_set read_fds, int flag_login, t_list chat);
+char  *send_msg(int listener, int fdmax, int i, fd_set master, fd_set *read_fds, fd_set *save_master, int flag_login, t_list chat);
 int   new_member(int flag_new_member, int fdmax, int flag_login_register, int i);
 void  get_init(char **argv, t_list chat);
 
 /*
 ** FUNC_LIST
 */
-int     nb_argu_list(t_list l);
-int     check_list_delog(t_list *l, int number_fd, int fdmax);
+int     check_list_delog(t_list *l, int number_fd);
 char    *check_list_return_login(t_list l, int number_fd);
 int     check_list_return_fd(t_list l, char *login_new);
 void		show_list(t_list l);

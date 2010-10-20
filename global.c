@@ -18,12 +18,10 @@ void close_client(int current_fd, fd_set master, int fdmax, t_list chat)
   char *msg_disconnect_all_users = " has just disconneted !\n";
   char *user_disconnect;
   int j = 0;
+  int ret = 0;
   
   user_disconnect = check_list_return_login(chat, current_fd);
   send(current_fd, disconnect, strlen(disconnect), 0);
-  //shutdown(current_fd, 1);
-  // close(current_fd);
-  // FD_CLR(current_fd, &master);
   for (j = 0; j <= fdmax; j++)
     {
       if (j != current_fd)
@@ -34,7 +32,7 @@ void close_client(int current_fd, fd_set master, int fdmax, t_list chat)
     }
 }
 
-void check_cmd(char *str, t_list chat, int current_fd, fd_set master, fd_set read_fds, int fdmax)
+void check_cmd(char *str, t_list chat, int current_fd, fd_set master, int fdmax)
 {
   char *check_login_in_list = NULL;
   int i = 1;
@@ -44,24 +42,9 @@ void check_cmd(char *str, t_list chat, int current_fd, fd_set master, fd_set rea
   char *bad_login = "bad login's name\n";
   char *private_user_msg = "Private message from ";
   char *recup_name_bis;
-  int ret_fdisset = 0;
   
-    /*close client*/
-    if (strcmp(str, "/exit\n") == 3)
-    {
-        close_client(current_fd, master, fdmax, chat);
-        show_list(chat);
-        printf("##### ok\n");
-        check_list_delog(&chat, current_fd, fdmax);
-        show_list(chat);
-        FD_CLR(current_fd, &master);
-        close(current_fd);
-        if(ret_fdisset = FD_ISSET(current_fd, &read_fds))
-          printf("######### check fd ! (%d)\n",ret_fdisset);
-        else
-          printf("***********blalbal\n");
-    }
-    else
+    //     close_client(current_fd, master, fdmax, chat);
+    //     check_list_delog(&chat, current_fd);
     {  
       /*recup login and message for a private message if login is in the list*/
       check_login_in_list = malloc(sizeof(char *) * 32);
@@ -94,7 +77,7 @@ void check_cmd(char *str, t_list chat, int current_fd, fd_set master, fd_set rea
     }
 }
 
-char *send_msg(int listener, int fdmax, int i, fd_set master, fd_set read_fds, int flag_login, t_list chat)
+char *send_msg(int listener, int fdmax, int i, fd_set master, fd_set *read_fds, fd_set *save_master, int flag_login, t_list chat)
 {
   int nbytes = 0;
   char buf[1024];
@@ -127,7 +110,7 @@ char *send_msg(int listener, int fdmax, int i, fd_set master, fd_set read_fds, i
       if (check_list_return_fd(chat, ret_login) != 0)
         {
           send(fdmax ,connect_log, strlen(connect_log), 0);
-          ret_login = send_msg(listener, fdmax, i, master, read_fds, flag_login, chat);
+          ret_login = send_msg(listener, fdmax, i, master, read_fds, save_master, flag_login, chat);
           return (ret_login);
         }
         login_str = strcat(stock_login, " : is now connected\n");
@@ -139,11 +122,11 @@ char *send_msg(int listener, int fdmax, int i, fd_set master, fd_set read_fds, i
   }
   else
   {
-    if ((nbytes = recv(i, buf, sizeof(buf), 0)) >= 0)
+    if ((nbytes = recv(i, buf, sizeof(buf), 0)) > 0)
     {
       buf[nbytes] = '\0'; 
       if (buf[0] == '/')
-        check_cmd(buf, chat, i, master, read_fds, fdmax); 
+        check_cmd(buf, chat, i, master, fdmax); 
       else
       {
         for (j = 0; j <= fdmax; j++)
@@ -167,11 +150,31 @@ char *send_msg(int listener, int fdmax, int i, fd_set master, fd_set read_fds, i
         }
       }  
     }
+    else
+    {
+      /* got error or connection closed by client */
+        close_client(i, master, fdmax, chat);
+        if(nbytes == 0)
+        /* connection closed */
+          printf("socket %d hung up\n", i);
+        else
+          perror("recv() error ");
+
+      /* close it... */
+        close(i);
+
+      /* remove from master set */
+        FD_CLR(i, &master);
+        FD_CLR(i, save_master);
+
+        check_list_delog(&chat, i);
+    }
   }
 }
 
 void get_init(char **argv, t_list chat)
 {
+  fd_set save_master;
   fd_set master;                  /* master file descriptor list */
   fd_set read_fds;                /* temp file descriptor list for select() */
   struct sockaddr_in serveraddr;  /* server address */
@@ -185,7 +188,6 @@ void get_init(char **argv, t_list chat)
   char *msg_send = "message send\n";
   int flag_login = 0;
   char *login;
-  int ret_fdisset = 0;
   int test = 0;
 
   /* clear the master and temp sets */
@@ -207,27 +209,22 @@ void get_init(char **argv, t_list chat)
 
   /* listen */
   listener = f_listen(listener);
-
-  /* add the listener to the master set */
-  FD_SET(listener, &master);
+  
   /* keep track of the biggest file descriptor */
   fdmax = listener;
   while(1)
   {
-    FD_ZERO(&read_fds);
-    read_fds = master;
-    //fdmax = f_select(fdmax, read_fds);
-    printf("$$$$$ fdmax = %d\n", fdmax);
-    if (select(fdmax + 1, &read_fds, NULL, NULL, NULL) == -1)
-    {
-        perror("Server-select() error");
-        // exit (-1) ;
-        //  
-    }
-    printf("Server-select() is OK...\n");
+    /* add the listener to the master set */
+    FD_ZERO(&save_master);
+    FD_SET(listener, &master);
     
-    if(ret_fdisset = FD_ISSET(fdmax, &read_fds))
-      printf("######### New incomming datum from Client ! (%d)\n",ret_fdisset);
+    FD_ZERO(&read_fds);
+   
+    read_fds = master;
+    save_master = master;
+    if (select(fdmax + 1, &read_fds, NULL, NULL, NULL) == -1)
+      perror("Server-select() error");
+    printf("Server-select() is OK...\n");
 
      /*run through the existing connections looking for data to be read*/
     for (i = 0; i <= fdmax; i++)
@@ -241,7 +238,7 @@ void get_init(char **argv, t_list chat)
           bzero(login, 0);
           addrlen = sizeof(clientaddr);
           if((newfd = accept(listener, (struct sockaddr *)&clientaddr, &addrlen)) == -1)
-            perror("Server-accept() error");
+              perror("Server-accept() error");
           else
           {
             printf("Server-accept() is OK...\n");
@@ -250,28 +247,20 @@ void get_init(char **argv, t_list chat)
               fdmax = newfd;
             printf("%s: New connection from %s on socket %d\n", argv[0], inet_ntoa(clientaddr.sin_addr), newfd);
             send(newfd, connect, strlen(connect), 0);
-            // get_login(listener, fdmax, i, master, flag);
             flag_login = 1;
           }
-          // flag_new_member = new_member(flag_new_member, fdmax, flag_login, i);
         }
         else
           {
-            login = send_msg(listener, fdmax, i, master, read_fds, flag_login, chat); 
-            // test = nb_argu_list(chat);
-            // printf("$$$ nb_argu : %d\n", test);
+            login = send_msg(listener, fdmax, i, master, &read_fds, &save_master, flag_login, chat); 
+            master = save_master;
             if (flag_login == 1)
               put_in_list_front(&chat, newfd, login);
            flag_login = 0;
-           // fdmax = nb_argu_list(chat);
-           // printf("$$$ nb_argu : %d\n", fdmax);
           }
       //  send(i, msg_send, strlen(msg_send), 0);
       }
     }
-    // test = nb_argu_list(chat);
-    // fdmax = nb_argu_list(chat);
-    // printf("$$$ nb_argu : %d\n", fdmax);
   }
 }
 

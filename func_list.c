@@ -15,28 +15,13 @@ void		show_list(t_list l)
   new = l.first;
   while (new)
     {
-      printf("***login:%s***", new->login);
+      printf("\n***login:%s***\n", new->login);
       printf("fd:%d \n", new->fd);
       new = new->next;
     }
   printf("\n");
 
 }
-
-int nb_argu_list(t_list l)
-{
-  int count = 0;
-  t_list *new;
-  
-  new = l.first;
-  while(new)
-  {
-    count++;
-    new = new->next;
-  }
-  return (count + 3);
-}
-
 
 char *check_list_return_login(t_list l, int number_fd)
 {
@@ -53,32 +38,36 @@ char *check_list_return_login(t_list l, int number_fd)
   return (bad_return);
 }
 
-int a_check_list_delog(t_list *l, int number_fd)
+int check_list_delog(t_list *l, int number_fd)
 {
   int number = 0;
-  t_list *new;
   
   l = l->first;
-    printf("---%d---\n", number_fd);
   while (l)
   {
-    printf("@@@%d@@@n", l->fd);
-    // if ((number_fd == l->fd) && (l->next) && (l->prev))
-    //   {
-    //     l = l->prev;
-    //     new = l->next;
-    //     l->next = new->next;
-    //     free(new);
-    //     new = NULL;
-    //     printf("OK\n");
-    //     return(0);
-    //   }
+    t_list *new;
+    int number = 0;
+    if ((number_fd == l->fd) /*&& (l->next) && (l->prev)*/)
+      {
+        l = l->prev;
+        new = l->next;
+        l->next = new->next;
+        free(new);
+        new = NULL;
+        printf("OK\n");
+        return(0);
+      }
     // else if ((number_fd == l->fd) && l->next)
     // {
     //   printf("\n   PREMIER  \n");
     //   new = l->first;
-    //   number = new->fd;
-    //   l->first = new->next;
+    //   printf("\n   A  \n");
+    //   // new = l->next;
+    //   printf("\n   B  \n");
+    //   number = l->fd;
+    //   printf("\n   C  \n");
+    //   l->first = l->next;
+    //   printf("\n   D  \n");
     //   if (l->first)
     //     l->first->prev = NULL;
     //   else 
@@ -86,18 +75,18 @@ int a_check_list_delog(t_list *l, int number_fd)
     //   printf("\n   FIN  \n");
     //   return (0);
     // }
-    if ((number_fd == l->fd) && l->prev)
-    {
-      printf("\n   LAST   \n");
-      new = l->last;
-      number = new->fd;
-      l->last = new->prev;
-      if (l->last)
-        l->last->next = NULL;
-      else 
-        l->first = NULL;
-      return(0);
-    }
+    // else if ((number_fd == l->fd) && l->last)
+    // {
+    //   printf("\n   LAST   \n");
+    //   new = l->last;
+    //   number = new->fd;
+    //   l->last = new->prev;
+    //   if (l->last)
+    //     l->last->next = NULL;
+    //   else 
+    //     l->first = NULL;
+    //   return(0);
+    // }
       l = l->next;
   }
     return(1);
@@ -113,7 +102,7 @@ void delete_first(t_list *l, int number_fd, int fdmax)
   
 }
 
-int check_list_delog(t_list *l, int number_fd, int fdmax)
+int a_check_list_delog(t_list *l, int number_fd, int fdmax)
 {
   int number = 0;
   t_list *new;
@@ -142,10 +131,10 @@ int check_list_delog(t_list *l, int number_fd, int fdmax)
   }
   else
   {
-    // l = l->first;
-    // while (l)
-    // {
-    //   if ((number_fd == l->fd))
+    l = l->first;
+    while (l)
+    {
+      if (number_fd != 4)
       {
         printf("\n   OTHER   \n");
         new = l->next;
@@ -154,7 +143,7 @@ int check_list_delog(t_list *l, int number_fd, int fdmax)
         new = NULL;
         l = l->next;
       }
-    // }
+    }
   }
 }
 
